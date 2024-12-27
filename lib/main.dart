@@ -20,7 +20,8 @@ class MainApp extends StatefulWidget {
   State<MainApp> createState() => _MainAppState();
 }
 
-class _MainAppState extends State<MainApp> with WidgetsBindingObserver {
+class _MainAppState extends State<MainApp>
+    with WidgetsBindingObserver, ChangeNotifier {
   @override
   void initState() {
     WidgetsBinding.instance.addObserver(this);
@@ -45,6 +46,7 @@ class _MainAppState extends State<MainApp> with WidgetsBindingObserver {
       case AppLifecycleState.resumed:
         if (laststate == AppLifecycleState.hidden) {
           getLocationPermissions();
+          notifyListeners();
         }
 
         break;

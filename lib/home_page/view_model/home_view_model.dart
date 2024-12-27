@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:map_test_app/core/helpers/calculate_distance_helper.dart';
+import 'package:map_test_app/core/helpers/map_marker_save_helper.dart';
 import 'package:map_test_app/core/widgets/custom_snackbar.dart';
 import 'package:map_test_app/home_page/bloc/home_bloc.dart';
 import 'package:map_test_app/home_page/view/home_view.dart';
@@ -22,6 +23,7 @@ mixin HomeViewModel on State<HomeView> {
 
   @override
   void initState() {
+    getCachedMarkers();
     getCurrentLocation();
     // TODO: implement initState
     super.initState();
@@ -32,6 +34,10 @@ mixin HomeViewModel on State<HomeView> {
     positionStream?.cancel();
     // TODO: implement dispose
     super.dispose();
+  }
+
+  getCachedMarkers() async {
+    markers = await mapMarkerGetter();
   }
 
   Future<void> animateTo(double lat, double lng) async {
@@ -85,7 +91,6 @@ mixin HomeViewModel on State<HomeView> {
       markers.last.position.longitude,
     );
     calculatedDistance *= 1000;
-    print("Calculated Distance: $calculatedDistance");
     if (calculatedDistance > meter) {
       addMarker(currentPosition);
     }
@@ -95,16 +100,28 @@ mixin HomeViewModel on State<HomeView> {
     completer.complete(controller);
   }
 
-  save() {}
+  Future<void> save() async {
+    if (markers.isEmpty) {
+      customSnackBar(text: "There is no marker to save.", color: Colors.red);
+      return;
+    }
+    await mapMarkerSetter(markers);
+    customSnackBar(text: "Markers saved.", color: Colors.green);
+  }
 
   playRecording() {
     context.read<HomeBloc>().add(PathRecorderEvent(activate: isPathRecording));
     addMarker(currentPosition);
   }
 
-  deleteRecording() {
-    //delete saved markers from cache
+  deleteRecording() async {
+    markers.clear();
+    await mapMarkerSetter(markers);
+    updateMarkers.value = markers;
+    context.read<HomeBloc>().add(PathRecorderEvent(activate: isPathRecording));
+    customSnackBar(text: "Map records deleted.", color: Colors.green);
   }
+
   clearMap() {
     markers.clear();
     updateMarkers.value = markers;
