@@ -53,10 +53,10 @@ mixin HomeViewModel on State<HomeView> {
     );
     positionStream =
         Geolocator.getPositionStream(locationSettings: locationSettings)
-            .listen((Position? position) {
+            .listen((Position? position) async {
       currentPosition = position;
-      animateTo(position?.latitude ?? 0, position?.longitude ?? 0);
       putMarkerByDistance(100.0);
+      await animateTo(position?.latitude ?? 0, position?.longitude ?? 0);
     });
   }
 
@@ -127,5 +127,10 @@ mixin HomeViewModel on State<HomeView> {
     updateMarkers.value = markers;
     customSnackBar(text: "Map cleared.", color: Colors.green);
     //put clear message here
+  }
+
+  centerMap() async {
+    await animateTo(
+        currentPosition?.latitude ?? 0, currentPosition?.longitude ?? 0);
   }
 }

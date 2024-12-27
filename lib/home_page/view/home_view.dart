@@ -29,6 +29,13 @@ class _HomeViewState extends State<HomeView>
             mainAxisSize: MainAxisSize.min,
             children: [
               FloatingActionButton(
+                onPressed: centerMap,
+                child: Icon(
+                  Icons.map_rounded,
+                  color: Colors.black,
+                ),
+              ),
+              FloatingActionButton(
                 onPressed: playRecording,
                 child: Icon(
                   isPathRecording ? Icons.stop : Icons.play_arrow,
