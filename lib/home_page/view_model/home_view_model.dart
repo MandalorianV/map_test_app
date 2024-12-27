@@ -1,8 +1,12 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:map_test_app/core/helpers/calculate_distance_helper.dart';
+import 'package:map_test_app/core/widgets/custom_snackbar.dart';
+import 'package:map_test_app/home_page/bloc/home_bloc.dart';
 import 'package:map_test_app/home_page/view/home_view.dart';
 
 mixin HomeViewModel on State<HomeView> {
@@ -11,6 +15,11 @@ mixin HomeViewModel on State<HomeView> {
       Completer<GoogleMapController>();
   StreamSubscription<Position>? positionStream;
   Completer<GoogleMapController> completer = Completer();
+  Set<Marker> markers = <Marker>{};
+  Position? currentPosition;
+  ValueNotifier updateMarkers = ValueNotifier<dynamic>("");
+  bool isPathRecording = false;
+
   @override
   void initState() {
     getCurrentLocation();
@@ -34,12 +43,72 @@ mixin HomeViewModel on State<HomeView> {
   getCurrentLocation() {
     final LocationSettings locationSettings = LocationSettings(
       accuracy: LocationAccuracy.high,
-      distanceFilter: 100,
+      distanceFilter: 20,
     );
     positionStream =
         Geolocator.getPositionStream(locationSettings: locationSettings)
             .listen((Position? position) {
+      currentPosition = position;
       animateTo(position?.latitude ?? 0, position?.longitude ?? 0);
+      putMarkerByDistance(100.0);
     });
+  }
+
+  addMarker(Position? position) {
+    if (position is! Position) {
+      // position could not be taken.
+      return;
+    }
+    markers.add(
+      Marker(
+        markerId: MarkerId(
+          position.timestamp.millisecondsSinceEpoch.toString(),
+        ),
+        position: LatLng(
+          position.latitude,
+          position.longitude,
+        ),
+        icon: BitmapDescriptor.defaultMarker,
+      ),
+    );
+    updateMarkers.value = position.timestamp.millisecondsSinceEpoch.toString();
+  }
+
+  putMarkerByDistance(double meter) {
+    if (markers.isEmpty) {
+      return;
+    }
+    double calculatedDistance = calculateDistance(
+      currentPosition?.latitude,
+      currentPosition?.longitude,
+      markers.last.position.latitude,
+      markers.last.position.longitude,
+    );
+    calculatedDistance *= 1000;
+    print("Calculated Distance: $calculatedDistance");
+    if (calculatedDistance > meter) {
+      addMarker(currentPosition);
+    }
+  }
+
+  onMapCreated(GoogleMapController controller) {
+    completer.complete(controller);
+  }
+
+  save() {}
+
+  playRecording() {
+    context.read<HomeBloc>().add(PathRecorderEvent(activate: isPathRecording));
+    addMarker(currentPosition);
+  }
+
+  deleteRecording() {
+    //delete saved markers from cache
+  }
+  clearMap() {
+    markers.clear();
+    updateMarkers.value = markers;
+    customSnackBar(text: "Map cleared.", color: Colors.green);
+    //put clear message here
   }
 }

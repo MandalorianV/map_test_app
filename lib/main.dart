@@ -1,9 +1,12 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:map_test_app/core/helpers/app_initializer.dart';
 import 'package:map_test_app/core/helpers/global_instances.dart';
 import 'package:map_test_app/core/helpers/location_permission_handler.dart';
+import 'package:map_test_app/home_page/bloc/home_bloc.dart';
 import 'package:map_test_app/home_page/view/home_view.dart';
+import 'package:toastification/toastification.dart';
 
 void main() {
   appInitializer();
@@ -51,20 +54,34 @@ class _MainAppState extends State<MainApp> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      navigatorKey: navigatorKey,
-      initialRoute: "home",
-      onGenerateRoute: (settings) {
-        switch (settings.name) {
-          case "home":
-            return CupertinoPageRoute(
-              builder: (context) => const HomeView(),
-            );
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(
+          create: (_) => HomeBloc(),
+        )
+      ],
+      child: ToastificationWrapper(
+        child: MaterialApp(
+          theme: ThemeData.light().copyWith(
+            floatingActionButtonTheme: FloatingActionButtonThemeData(
+              backgroundColor: Colors.green,
+            ),
+          ),
+          navigatorKey: navigatorKey,
+          initialRoute: "home",
+          onGenerateRoute: (settings) {
+            switch (settings.name) {
+              case "home":
+                return CupertinoPageRoute(
+                  builder: (context) => const HomeView(),
+                );
 
-          default:
-        }
-        return null;
-      },
+              default:
+            }
+            return null;
+          },
+        ),
+      ),
     );
   }
 }
