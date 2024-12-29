@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_config/flutter_config.dart';
 
 void appInitializer() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await FlutterConfig.loadEnvVariables();
-  print(FlutterConfig.get('GOOGLE_API_KEY'));
+
+  /// Normally Google api keys needs to retrieve from .env but for testing
+  /// purposes, I'll leave as it is.
+  // await FlutterConfig.loadEnvVariables();
 }

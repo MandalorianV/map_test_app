@@ -56,7 +56,7 @@ class _HomeViewState extends State<HomeView>
                   ),
                 ),
                 FloatingActionButton(
-                  onPressed: markers.isEmpty ? null : clearMap,
+                  onPressed: clearMap,
                   child: const Icon(
                     Icons.restart_alt_outlined,
                     color: Colors.black,

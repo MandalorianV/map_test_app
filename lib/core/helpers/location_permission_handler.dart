@@ -42,7 +42,7 @@ Future<void> getLocationPermissions() async {
       buttonTextCancel: "Cancel",
       onPressedCancel: () async {
         Navigator.of(navigatorKey.currentContext!).pop();
-        await getLocationPermissions();
+        getLocationPermissions();
       },
     );
     return;
@@ -51,7 +51,7 @@ Future<void> getLocationPermissions() async {
   if (locationPermission == LocationPermission.denied) {
     await Geolocator.requestPermission();
     isAppLocationPermissionDeniedOnce = true;
-    await getLocationPermissions();
+    getLocationPermissions();
     return;
   }
 
@@ -69,7 +69,7 @@ Future<void> getLocationPermissions() async {
       buttonTextCancel: "Cancel",
       onPressedCancel: () async {
         Navigator.of(navigatorKey.currentContext!).pop();
-        await getLocationPermissions();
+        getLocationPermissions();
       },
     );
 

@@ -2,9 +2,11 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:map_test_app/core/helpers/calculate_distance_helper.dart';
+import 'package:map_test_app/core/helpers/location_permission_handler.dart';
 import 'package:map_test_app/core/helpers/map_marker_save_helper.dart';
 import 'package:map_test_app/core/widgets/custom_snackbar.dart';
 import 'package:map_test_app/home_page/bloc/home_bloc.dart';
@@ -48,7 +50,8 @@ mixin HomeViewModel on State<HomeView> {
     await c.animateCamera(CameraUpdate.newCameraPosition(p));
   }
 
-  void getCurrentLocation() {
+  void getCurrentLocation() async {
+    await getLocationPermissions();
     final LocationSettings locationSettings = const LocationSettings(
       accuracy: LocationAccuracy.high,
       distanceFilter: 20,
@@ -64,13 +67,18 @@ mixin HomeViewModel on State<HomeView> {
     });
   }
 
-  void addMarker(Position? position) {
+  void addMarker(Position? position) async {
     if (position is! Position) {
       // position could not be taken.
       return;
     }
+    String markerTitle = await getAddressInfoByCoordinates(
+      position.latitude,
+      position.longitude,
+    );
     markers.add(
       Marker(
+        infoWindow: InfoWindow(title: markerTitle),
         markerId: MarkerId(
           position.timestamp.millisecondsSinceEpoch.toString(),
         ),
@@ -115,16 +123,15 @@ mixin HomeViewModel on State<HomeView> {
   }
 
   void playRecording() {
+    if (!isPathRecording) {
+      addMarker(currentPosition);
+    }
     context.read<HomeBloc>().add(PathRecorderEvent(activate: isPathRecording));
-    addMarker(currentPosition);
   }
 
   Future<void> deleteRecording() async {
     Set<Marker> savedMarkers = await getMarkerList();
     if (savedMarkers.isEmpty) {
-      context
-          .read<HomeBloc>()
-          .add(PathRecorderEvent(activate: isPathRecording));
       customSnackBar(
         text: "There is no recorded marker.",
         color: Colors.orange,
@@ -132,8 +139,9 @@ mixin HomeViewModel on State<HomeView> {
       return;
     }
     markers.clear();
-    await saveMarkerList(markers);
     updateMarkers.value = markers;
+    await saveMarkerList(markers);
+
     context.read<HomeBloc>().add(PathRecorderEvent(activate: isPathRecording));
     customSnackBar(text: "Map records deleted.", color: Colors.green);
   }
@@ -151,4 +159,23 @@ mixin HomeViewModel on State<HomeView> {
       currentPosition?.longitude ?? 0,
     );
   }
+}
+
+Future<String> getAddressInfoByCoordinates(
+  double? langtitude,
+  double? longitude,
+) async {
+  if (langtitude is! double) {
+    return "Not found";
+  }
+  if (longitude is! double) {
+    return "Not found";
+  }
+
+  List<Placemark> placemarks =
+      await placemarkFromCoordinates(langtitude, longitude);
+  if (placemarks.isEmpty) {
+    return "Not Found";
+  }
+  return placemarks.first.name ?? "Not Found";
 }
