@@ -5,7 +5,9 @@
 bin/internal/engine.version
 # env
 *.env
+
 # Miscellaneous
+pubspec.lock
 *.class
 *.lock
 *.log
