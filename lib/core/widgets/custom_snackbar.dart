@@ -28,26 +28,37 @@ void customSnackBar({
           borderRadius: BorderRadius.circular(8),
           color: color,
         ),
-        constraints: BoxConstraints(minHeight: 20),
+        constraints: const BoxConstraints(minHeight: 20),
         padding: const EdgeInsets.all(16),
         margin: const EdgeInsets.all(8),
         child: Row(
-          children: [
+          children: <Widget>[
             Expanded(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 mainAxisAlignment: MainAxisAlignment.start,
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
+                children: <Widget>[
                   title is! String
-                      ? SizedBox()
-                      : Text(title ?? "",
-                          style: TextStyle(
-                              color: Colors.black,
-                              fontWeight: FontWeight.bold)),
-                  title is! String ? SizedBox() : const SizedBox(height: 8),
-                  Text(text, style: TextStyle(color: Colors.black)),
-                  title is! String ? SizedBox() : const SizedBox(height: 16),
+                      ? const SizedBox()
+                      : Text(
+                          title,
+                          style: const TextStyle(
+                            color: Colors.black,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                  title is! String
+                      ? const SizedBox()
+                      : const SizedBox(
+                          height: 8,
+                        ),
+                  Text(text, style: const TextStyle(color: Colors.black)),
+                  title is! String
+                      ? const SizedBox()
+                      : const SizedBox(
+                          height: 16,
+                        ),
                 ],
               ),
             ),

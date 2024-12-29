@@ -4,12 +4,15 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 Future<void> saveMarkerList(Set<Marker> markers) async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
-  List<MapMarker> mapMarkers = [];
+  List<MapMarker> mapMarkers = <MapMarker>[];
   for (Marker marker in markers) {
-    mapMarkers.add(MapMarker(
+    mapMarkers.add(
+      MapMarker(
         latitude: marker.position.latitude,
         longitude: marker.position.longitude,
-        title: marker.markerId.value));
+        title: marker.markerId.value,
+      ),
+    );
   }
   String jsonMarkerList = markerListToJson(mapMarkers);
   await prefs.setString('marker_list', jsonMarkerList);

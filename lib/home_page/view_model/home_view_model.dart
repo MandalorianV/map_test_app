@@ -15,40 +15,41 @@ mixin HomeViewModel on State<HomeView> {
   final Completer<GoogleMapController> mapController =
       Completer<GoogleMapController>();
   StreamSubscription<Position>? positionStream;
-  Completer<GoogleMapController> completer = Completer();
+  Completer<GoogleMapController> completer = Completer<GoogleMapController>();
   Set<Marker> markers = <Marker>{};
   Position? currentPosition;
-  ValueNotifier updateMarkers = ValueNotifier<dynamic>("");
+  ValueNotifier<dynamic> updateMarkers = ValueNotifier<dynamic>("");
   bool isPathRecording = false;
 
   @override
   void initState() {
-    getCachedMarkers();
+    unawaited(getCachedMarkers());
     getCurrentLocation();
-    // TODO: implement initState
+
     super.initState();
   }
 
   @override
   void dispose() {
-    positionStream?.cancel();
-    // TODO: implement dispose
+    unawaited(positionStream?.cancel());
+
     super.dispose();
   }
 
-  getCachedMarkers() async {
+  Future<void> getCachedMarkers() async {
     markers = await getMarkerList();
     updateMarkers.value = markers;
   }
 
   Future<void> animateTo(double lat, double lng) async {
-    final c = await completer.future;
-    final p = CameraPosition(target: LatLng(lat, lng), zoom: 14.4746);
-    c.animateCamera(CameraUpdate.newCameraPosition(p));
+    final GoogleMapController c = await completer.future;
+    final CameraPosition p =
+        CameraPosition(target: LatLng(lat, lng), zoom: 14.4746);
+    await c.animateCamera(CameraUpdate.newCameraPosition(p));
   }
 
-  getCurrentLocation() {
-    final LocationSettings locationSettings = LocationSettings(
+  void getCurrentLocation() {
+    final LocationSettings locationSettings = const LocationSettings(
       accuracy: LocationAccuracy.high,
       distanceFilter: 20,
     );
@@ -63,7 +64,7 @@ mixin HomeViewModel on State<HomeView> {
     });
   }
 
-  addMarker(Position? position) {
+  void addMarker(Position? position) {
     if (position is! Position) {
       // position could not be taken.
       return;
@@ -83,14 +84,14 @@ mixin HomeViewModel on State<HomeView> {
     updateMarkers.value = position.timestamp.millisecondsSinceEpoch.toString();
   }
 
-  putMarkerByDistance(double meter) {
+  void putMarkerByDistance(double meter) {
     if (markers.isEmpty) {
       addMarker(currentPosition);
       return;
     }
     double calculatedDistance = calculateDistance(
-      currentPosition?.latitude,
-      currentPosition?.longitude,
+      currentPosition?.latitude ?? 0,
+      currentPosition?.longitude ?? 0,
       markers.last.position.latitude,
       markers.last.position.longitude,
     );
@@ -100,7 +101,7 @@ mixin HomeViewModel on State<HomeView> {
     }
   }
 
-  onMapCreated(GoogleMapController controller) {
+  void onMapCreated(GoogleMapController controller) {
     completer.complete(controller);
   }
 
@@ -113,19 +114,21 @@ mixin HomeViewModel on State<HomeView> {
     customSnackBar(text: "Markers saved.", color: Colors.green);
   }
 
-  playRecording() {
+  void playRecording() {
     context.read<HomeBloc>().add(PathRecorderEvent(activate: isPathRecording));
     addMarker(currentPosition);
   }
 
-  deleteRecording() async {
+  Future<void> deleteRecording() async {
     Set<Marker> savedMarkers = await getMarkerList();
     if (savedMarkers.isEmpty) {
       context
           .read<HomeBloc>()
           .add(PathRecorderEvent(activate: isPathRecording));
       customSnackBar(
-          text: "There is no recorded marker.", color: Colors.orange);
+        text: "There is no recorded marker.",
+        color: Colors.orange,
+      );
       return;
     }
     markers.clear();
@@ -135,15 +138,17 @@ mixin HomeViewModel on State<HomeView> {
     customSnackBar(text: "Map records deleted.", color: Colors.green);
   }
 
-  clearMap() {
+  void clearMap() {
     markers.clear();
     updateMarkers.value = markers;
     customSnackBar(text: "Map cleared.", color: Colors.green);
     //put clear message here
   }
 
-  centerMap() async {
+  Future<void> centerMap() async {
     await animateTo(
-        currentPosition?.latitude ?? 0, currentPosition?.longitude ?? 0);
+      currentPosition?.latitude ?? 0,
+      currentPosition?.longitude ?? 0,
+    );
   }
 }

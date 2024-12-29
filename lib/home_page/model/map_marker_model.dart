@@ -4,11 +4,12 @@
 
 import 'dart:convert';
 
-List<MapMarker> markerListFromJson(String str) =>
-    List<MapMarker>.from(json.decode(str).map((x) => MapMarker.fromJson(x)));
+List<MapMarker> markerListFromJson(String str) => List<MapMarker>.from(
+      json.decode(str).map((dynamic x) => MapMarker.fromJson(x)),
+    );
 
 String markerListToJson(List<MapMarker> data) =>
-    json.encode(List<dynamic>.from(data.map((x) => x.toJson())));
+    json.encode(List<dynamic>.from(data.map((MapMarker x) => x.toJson())));
 
 class MapMarker {
   double? latitude;
@@ -27,7 +28,7 @@ class MapMarker {
         title: json["title"],
       );
 
-  Map<String, dynamic> toJson() => {
+  Map<String, dynamic> toJson() => <String, dynamic>{
         "latitude": latitude,
         "longtitude": longitude,
         "title": title,

@@ -6,6 +6,9 @@ import 'package:map_test_app/core/helpers/global_instances.dart';
 import 'package:map_test_app/core/helpers/location_permission_handler.dart';
 import 'package:map_test_app/home_page/bloc/home_bloc.dart';
 import 'package:map_test_app/home_page/view/home_view.dart';
+// ignore: depend_on_referenced_packages
+import 'package:nested/nested.dart';
+
 import 'package:toastification/toastification.dart';
 
 void main() {
@@ -35,17 +38,16 @@ class _MainAppState extends State<MainApp>
   }
 
   @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    // TODO: implement didChangeAppLifecycleState
+  void didChangeAppLifecycleState(AppLifecycleState state) async {
     super.didChangeAppLifecycleState(state);
-    print(state);
+
     if (laststate != AppLifecycleState.resumed) {
       laststate = state;
     }
     switch (state) {
       case AppLifecycleState.resumed:
         if (laststate == AppLifecycleState.hidden) {
-          getLocationPermissions();
+          await getLocationPermissions();
           notifyListeners();
         }
 
@@ -55,35 +57,33 @@ class _MainAppState extends State<MainApp>
   }
 
   @override
-  Widget build(BuildContext context) {
-    return MultiBlocProvider(
-      providers: [
-        BlocProvider(
-          create: (_) => HomeBloc(),
-        )
-      ],
-      child: ToastificationWrapper(
-        child: MaterialApp(
-          theme: ThemeData.light().copyWith(
-            floatingActionButtonTheme: FloatingActionButtonThemeData(
-              backgroundColor: Colors.green,
-            ),
+  Widget build(BuildContext context) => MultiBlocProvider(
+        providers: <SingleChildWidget>[
+          BlocProvider<HomeBloc>(
+            create: (_) => HomeBloc(),
           ),
-          navigatorKey: navigatorKey,
-          initialRoute: "home",
-          onGenerateRoute: (settings) {
-            switch (settings.name) {
-              case "home":
-                return CupertinoPageRoute(
-                  builder: (context) => const HomeView(),
-                );
+        ],
+        child: ToastificationWrapper(
+          child: MaterialApp(
+            theme: ThemeData.light().copyWith(
+              floatingActionButtonTheme: const FloatingActionButtonThemeData(
+                backgroundColor: Colors.green,
+              ),
+            ),
+            navigatorKey: navigatorKey,
+            initialRoute: "home",
+            onGenerateRoute: (RouteSettings settings) {
+              switch (settings.name) {
+                case "home":
+                  return CupertinoPageRoute<dynamic>(
+                    builder: (BuildContext context) => const HomeView(),
+                  );
 
-              default:
-            }
-            return null;
-          },
+                default:
+              }
+              return null;
+            },
+          ),
         ),
-      ),
-    );
-  }
+      );
 }
