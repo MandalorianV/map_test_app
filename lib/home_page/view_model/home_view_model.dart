@@ -37,7 +37,8 @@ mixin HomeViewModel on State<HomeView> {
   }
 
   getCachedMarkers() async {
-    markers = await mapMarkerGetter();
+    markers = await getMarkerList();
+    updateMarkers.value = markers;
   }
 
   Future<void> animateTo(double lat, double lng) async {
@@ -55,7 +56,9 @@ mixin HomeViewModel on State<HomeView> {
         Geolocator.getPositionStream(locationSettings: locationSettings)
             .listen((Position? position) async {
       currentPosition = position;
-      putMarkerByDistance(100.0);
+      if (isPathRecording) {
+        putMarkerByDistance(100.0);
+      }
       await animateTo(position?.latitude ?? 0, position?.longitude ?? 0);
     });
   }
@@ -82,6 +85,7 @@ mixin HomeViewModel on State<HomeView> {
 
   putMarkerByDistance(double meter) {
     if (markers.isEmpty) {
+      addMarker(currentPosition);
       return;
     }
     double calculatedDistance = calculateDistance(
@@ -105,7 +109,7 @@ mixin HomeViewModel on State<HomeView> {
       customSnackBar(text: "There is no marker to save.", color: Colors.red);
       return;
     }
-    await mapMarkerSetter(markers);
+    await saveMarkerList(markers);
     customSnackBar(text: "Markers saved.", color: Colors.green);
   }
 
@@ -115,8 +119,17 @@ mixin HomeViewModel on State<HomeView> {
   }
 
   deleteRecording() async {
+    Set<Marker> savedMarkers = await getMarkerList();
+    if (savedMarkers.isEmpty) {
+      context
+          .read<HomeBloc>()
+          .add(PathRecorderEvent(activate: isPathRecording));
+      customSnackBar(
+          text: "There is no recorded marker.", color: Colors.orange);
+      return;
+    }
     markers.clear();
-    await mapMarkerSetter(markers);
+    await saveMarkerList(markers);
     updateMarkers.value = markers;
     context.read<HomeBloc>().add(PathRecorderEvent(activate: isPathRecording));
     customSnackBar(text: "Map records deleted.", color: Colors.green);

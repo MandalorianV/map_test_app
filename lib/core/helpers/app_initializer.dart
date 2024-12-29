@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:map_test_app/core/helpers/location_permission_handler.dart';
+import 'package:flutter_config/flutter_config.dart';
 
 Future<void> appInitializer() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await getLocationPermissions();
+  await FlutterConfig.loadEnvVariables();
+  print(FlutterConfig.get('GOOGLE_API_KEY'));
 }

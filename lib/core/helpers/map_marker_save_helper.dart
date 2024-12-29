@@ -1,42 +1,35 @@
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:map_test_app/core/cache_manager/shared_value_helper.dart';
-import 'package:map_test_app/home_page/model/map_marker_mode.dart';
+import 'package:map_test_app/home_page/model/map_marker_model.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-Future<void> mapMarkerLoader() async {
-  await saved_markers.load();
-}
-
-Future<void> mapMarkerSetter(Set<Marker> markers) async {
-  await saved_markers.load();
-  saved_markers.$.clear();
-  // if markers are ready, record will be deleted.
-  if (markers.isEmpty) {
-    await saved_markers.save();
-    return;
-  }
+Future<void> saveMarkerList(Set<Marker> markers) async {
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  List<MapMarker> mapMarkers = [];
   for (Marker marker in markers) {
-    saved_markers.$.add(
-      MapMarker(
+    mapMarkers.add(MapMarker(
         latitude: marker.position.latitude,
         longitude: marker.position.longitude,
-        title: marker.markerId.value,
-      ),
-    );
+        title: marker.markerId.value));
   }
-  await saved_markers.save();
+  String jsonMarkerList = markerListToJson(mapMarkers);
+  await prefs.setString('marker_list', jsonMarkerList);
 }
 
-Future<Set<Marker>> mapMarkerGetter() async {
+Future<Set<Marker>> getMarkerList() async {
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  String markerListString = prefs.getString('marker_list') ?? "";
+  if (markerListString.isEmpty) {
+    return <Marker>{};
+  }
+  List<MapMarker> mapMarkers = markerListFromJson(markerListString);
   Set<Marker> markers = <Marker>{};
-  await saved_markers.load();
-
-  for (dynamic marker in saved_markers.$) {
+  for (MapMarker marker in mapMarkers) {
     markers.add(
       Marker(
-        markerId: MarkerId(marker.title),
+        markerId: MarkerId(marker.title ?? ""),
         position: LatLng(
-          marker.latitude,
-          marker.longitude,
+          marker.latitude ?? 0,
+          marker.longitude ?? 0,
         ),
       ),
     );
